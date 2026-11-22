@@ -2,7 +2,6 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 const STACK_MAX = 256, CALLS_MAX = 64, MEMORY_WORDS = 256, STEP_LIMIT = 1e6, OUTPUT_MAX = 65536;
 const TRAP = { UNDERFLOW: 2, OVERFLOW: 3, DIV_ZERO: 4, BAD_OPCODE: 5, MEMORY: 6, CALL_DEPTH: 7, RET_EMPTY: 8, PC: 9, STEPS: 10, OUTPUT: 11 };
-// byte -> [name, immediate bytes, pops, pushes]
 const OPS = new Map<number, [string, number, number, number]>([
   [0x00, ['HALT', 0, 0, 0]], [0x01, ['PUSH8', 1, 0, 1]], [0x02, ['PUSH32', 4, 0, 1]],
   [0x03, ['POP', 0, 1, 0]], [0x04, ['DUP', 0, 1, 2]], [0x05, ['SWAP', 0, 2, 2]],
