@@ -1,4 +1,3 @@
-// tiny-stack-vm entry, make.fun tiny-stack-vm-01-run-20261122. Port of kit generator/subject/vm.mjs (ISA v1).
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 const STACK_MAX = 256, CALLS_MAX = 64, MEMORY_WORDS = 256, STEP_LIMIT = 1e6, OUTPUT_MAX = 65536;
@@ -136,8 +135,7 @@ function run(program: Uint8Array, input: Uint8Array): { stdout: Uint8Array; exit
     }
   }
 }
-const INPUT_DIR = process.env.MAKEFUN_INPUT_DIR ?? '/input';
-const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const INPUT_DIR = process.env.MAKEFUN_INPUT_DIR ?? '/input', OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 for (const id of readdirSync(INPUT_DIR).sort()) {
   const dir = join(INPUT_DIR, id);
   let program: Uint8Array, input: Uint8Array;
