@@ -22,10 +22,8 @@ const OPS = new Map<number, [string, number, number, number]>([
 const enc = new TextEncoder();
 function run(program: Uint8Array, input: Uint8Array): { stdout: Uint8Array; exit: number } {
   const n = program.length;
-  const D = new Int32Array(STACK_MAX);
-  let sp = 0;
-  const C = new Int32Array(CALLS_MAX);
-  let csp = 0;
+  const D = new Int32Array(STACK_MAX); let sp = 0;
+  const C = new Int32Array(CALLS_MAX); let csp = 0;
   const M = new Int32Array(MEMORY_WORDS);
   const out = new Uint8Array(OUTPUT_MAX);
   let olen = 0, inPos = 0, pc = 0, steps = 0;
