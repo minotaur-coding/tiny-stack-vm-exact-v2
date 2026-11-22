@@ -47,8 +47,6 @@ function run(program: Uint8Array, input: Uint8Array): { stdout: Uint8Array; exit
       case 'POP': sp--; break;
       case 'DUP': D[sp] = D[sp - 1]; sp++; break;
       case 'SWAP': { const t = D[sp - 1]; D[sp - 1] = D[sp - 2]; D[sp - 2] = t; break; }
-      case 'OVER': D[sp] = D[sp - 2]; sp++; break;
-      case 'ROT': { const a = D[sp - 3]; D[sp - 3] = D[sp - 2]; D[sp - 2] = D[sp - 1]; D[sp - 1] = a; break; }
       case 'NEG': D[sp - 1] = -D[sp - 1] | 0; break;
       case 'NOT': D[sp - 1] = ~D[sp - 1]; break;
       case 'ADD': case 'SUB': case 'MUL': case 'DIV': case 'MOD':
