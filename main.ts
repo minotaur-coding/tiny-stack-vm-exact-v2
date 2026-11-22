@@ -1,3 +1,150 @@
-// tiny stack VM - exact reference semantics (minified for the size tie-break)
-import{readdirSync as C,readFileSync as H,writeFileSync as l,mkdirSync as d}from"node:fs";import{join as E}from"node:path";const _=256,V=64,S=256,Z=1e6,L=65536,n={UNDERFLOW:2,OVERFLOW:3,DIV_ZERO:4,BAD_OPCODE:5,MEMORY:6,CALL_DEPTH:7,RET_EMPTY:8,PC:9,STEPS:10,OUTPUT:11},h=new Map([[0,["HALT",0,0,0]],[1,["PUSH8",1,0,1]],[2,["PUSH32",4,0,1]],[3,["POP",0,1,0]],[4,["DUP",0,1,2]],[5,["SWAP",0,2,2]],[6,["OVER",0,2,3]],[7,["ROT",0,3,3]],[16,["ADD",0,2,1]],[17,["SUB",0,2,1]],[18,["MUL",0,2,1]],[19,["DIV",0,2,1]],[20,["MOD",0,2,1]],[21,["DIVU",0,2,1]],[22,["MODU",0,2,1]],[23,["NEG",0,1,1]],[24,["AND",0,2,1]],[25,["OR",0,2,1]],[26,["XOR",0,2,1]],[27,["NOT",0,1,1]],[28,["SHL",0,2,1]],[29,["SHR",0,2,1]],[30,["SHRU",0,2,1]],[32,["EQ",0,2,1]],[33,["LT",0,2,1]],[34,["LTU",0,2,1]],[48,["JMP",2,0,0]],[49,["JZ",2,1,0]],[50,["JNZ",2,1,0]],[51,["CALL",2,0,0]],[52,["RET",0,0,0]],[64,["LOAD",0,1,1]],[65,["STORE",0,2,0]],[80,["PRINT",0,1,0]],[81,["PUTC",0,1,0]],[82,["IN",0,0,1]],[83,["EXIT",0,1,0]]]),p=new TextEncoder;function m(O,R){const b=O.length,a=new Int32Array(_);let r=0;const i=new Int32Array(V);let T=0;const A=new Int32Array(S),u=new Uint8Array(L);let D=0,M=0,U=0,f=0;const t=P=>({stdout:u.slice(0,D),exit:P});for(;;){if(f===Z)return t(n.STEPS);if(U<0||U>=b)return t(n.PC);const P=h.get(O[U]);if(P===void 0)return t(n.BAD_OPCODE);const[k,I,N,y]=P;if(U+I>=b)return t(n.PC);f++;const o=U+1+I;if(r<N)return t(n.UNDERFLOW);if(r-N+y>_)return t(n.OVERFLOW);switch(U=o,k){case"HALT":return t(0);case"PUSH8":a[r++]=O[o-1]<<24>>24;break;case"PUSH32":a[r++]=O[o-4]|O[o-3]<<8|O[o-2]<<16|O[o-1]<<24;break;case"POP":r--;break;case"DUP":a[r]=a[r-1],r++;break;case"SWAP":{const e=a[r-1];a[r-1]=a[r-2],a[r-2]=e;break}case"ROT":{const e=a[r-3];a[r-3]=a[r-2],a[r-2]=a[r-1],a[r-1]=e;break}case"NEG":a[r-1]=-a[r-1]|0;break;case"NOT":a[r-1]=~a[r-1];break;case"ADD":case"SUB":case"MUL":case"DIV":case"MOD":case"DIVU":case"MODU":case"AND":case"OR":case"XOR":case"SHL":case"SHR":case"SHRU":case"EQ":case"LT":case"LTU":{const e=a[r-1],s=a[r-2];let c;switch(k){case"ADD":c=s+e|0;break;case"SUB":c=s-e|0;break;case"MUL":c=Math.imul(s,e);break;case"DIV":if(e===0)return t(n.DIV_ZERO);c=s===-2147483648&&e===-1?s:s/e|0;break;case"MOD":if(e===0)return t(n.DIV_ZERO);c=e===-1?0:s%e|0;break;case"DIVU":if(e===0)return t(n.DIV_ZERO);c=Math.floor((s>>>0)/(e>>>0))|0;break;case"MODU":if(e===0)return t(n.DIV_ZERO);c=(s>>>0)%(e>>>0)|0;break;case"AND":c=s&e;break;case"OR":c=s|e;break;case"XOR":c=s^e;break;case"SHL":c=s<<(e&31);break;case"SHR":c=s>>(e&31);break;case"SHRU":c=s>>>(e&31)|0;break;case"EQ":c=s===e?1:0;break;case"LT":c=s<e?1:0;break;case"LTU":c=s>>>0<e>>>0?1:0;break}r-=2,a[r++]=c;break}case"JMP":case"JZ":case"JNZ":{const e=(O[o-2]|O[o-1]<<8)<<16>>16;let s=!0;if(k!=="JMP"){const c=a[--r];s=k==="JZ"?c===0:c!==0}s&&(U=o+e);break}case"CALL":if(T===V)return t(n.CALL_DEPTH);i[T++]=o,U=O[o-2]|O[o-1]<<8;break;case"RET":if(T===0)return t(n.RET_EMPTY);U=i[--T];break;case"LOAD":{const e=a[r-1];if(e<0||e>=S)return t(n.MEMORY);a[r-1]=A[e];break}case"STORE":{const e=a[r-1],s=a[r-2];if(e<0||e>=S)return t(n.MEMORY);r-=2,A[e]=s;break}case"PRINT":{const e=p.encode(String(a[r-1]));if(D+e.length>L)return t(n.OUTPUT);r--,u.set(e,D),D+=e.length;break}case"PUTC":if(D+1>L)return t(n.OUTPUT);u[D++]=a[--r]&255;break;case"IN":a[r++]=M<R.length?R[M++]:-1;break;case"EXIT":return t(a[--r]&255)}}}const w=process.env.MAKEFUN_INPUT_DIR??"/input",F=process.env.MAKEFUN_OUTPUT_DIR??"/output";for(const O of C(w).sort()){const R=E(w,O);let b,a;try{b=new Uint8Array(H(E(R,"program.bin"))),a=new Uint8Array(H(E(R,"input.bin")))}catch{continue}const{stdout:r,exit:i}=m(b,a),T=E(F,O);d(T,{recursive:!0}),l(E(T,"stdout.bin"),r),l(E(T,"exit.txt"),i+`
-`)}
+import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+const STACK_MAX = 256, CALLS_MAX = 64, MEMORY_WORDS = 256, STEP_LIMIT = 1e6, OUTPUT_MAX = 65536;
+const TRAP = { UNDERFLOW: 2, OVERFLOW: 3, DIV_ZERO: 4, BAD_OPCODE: 5, MEMORY: 6, CALL_DEPTH: 7, RET_EMPTY: 8, PC: 9, STEPS: 10, OUTPUT: 11 };
+const OPS = new Map<number, [string, number, number, number]>([
+  [0x00, ['HALT', 0, 0, 0]], [0x01, ['PUSH8', 1, 0, 1]], [0x02, ['PUSH32', 4, 0, 1]],
+  [0x03, ['POP', 0, 1, 0]], [0x04, ['DUP', 0, 1, 2]], [0x05, ['SWAP', 0, 2, 2]],
+  [0x06, ['OVER', 0, 2, 3]], [0x07, ['ROT', 0, 3, 3]], [0x10, ['ADD', 0, 2, 1]],
+  [0x11, ['SUB', 0, 2, 1]], [0x12, ['MUL', 0, 2, 1]], [0x13, ['DIV', 0, 2, 1]],
+  [0x14, ['MOD', 0, 2, 1]], [0x15, ['DIVU', 0, 2, 1]], [0x16, ['MODU', 0, 2, 1]],
+  [0x17, ['NEG', 0, 1, 1]], [0x18, ['AND', 0, 2, 1]], [0x19, ['OR', 0, 2, 1]],
+  [0x1a, ['XOR', 0, 2, 1]], [0x1b, ['NOT', 0, 1, 1]], [0x1c, ['SHL', 0, 2, 1]],
+  [0x1d, ['SHR', 0, 2, 1]], [0x1e, ['SHRU', 0, 2, 1]], [0x20, ['EQ', 0, 2, 1]],
+  [0x21, ['LT', 0, 2, 1]], [0x22, ['LTU', 0, 2, 1]], [0x30, ['JMP', 2, 0, 0]],
+  [0x31, ['JZ', 2, 1, 0]], [0x32, ['JNZ', 2, 1, 0]], [0x33, ['CALL', 2, 0, 0]],
+  [0x34, ['RET', 0, 0, 0]], [0x40, ['LOAD', 0, 1, 1]], [0x41, ['STORE', 0, 2, 0]],
+  [0x50, ['PRINT', 0, 1, 0]], [0x51, ['PUTC', 0, 1, 0]], [0x52, ['IN', 0, 0, 1]],
+  [0x53, ['EXIT', 0, 1, 0]],
+]);
+const enc = new TextEncoder();
+function run(program: Uint8Array, input: Uint8Array): { stdout: Uint8Array; exit: number } {
+  const n = program.length;
+  const D = new Int32Array(STACK_MAX); let sp = 0;
+  const C = new Int32Array(CALLS_MAX); let csp = 0;
+  const M = new Int32Array(MEMORY_WORDS);
+  const out = new Uint8Array(OUTPUT_MAX);
+  let olen = 0, inPos = 0, pc = 0, steps = 0;
+  const done = (exit: number) => ({ stdout: out.slice(0, olen), exit });
+  for (;;) {
+    if (steps === STEP_LIMIT) return done(TRAP.STEPS);
+    if (pc < 0 || pc >= n) return done(TRAP.PC);
+    const op = OPS.get(program[pc]);
+    if (op === undefined) return done(TRAP.BAD_OPCODE);
+    const [name, imm, pops, pushes] = op;
+    if (pc + imm >= n) return done(TRAP.PC);
+    steps++;
+    const next = pc + 1 + imm;
+    if (sp < pops) return done(TRAP.UNDERFLOW);
+    if (sp - pops + pushes > STACK_MAX) return done(TRAP.OVERFLOW);
+    pc = next;
+    switch (name) {
+      case 'HALT': return done(0);
+      case 'PUSH8': D[sp++] = (program[next - 1] << 24) >> 24; break;
+      case 'PUSH32': D[sp++] = program[next - 4] | (program[next - 3] << 8) | (program[next - 2] << 16) | (program[next - 1] << 24); break;
+      case 'POP': sp--; break;
+      case 'DUP': D[sp] = D[sp - 1]; sp++; break;
+      case 'SWAP': { const t = D[sp - 1]; D[sp - 1] = D[sp - 2]; D[sp - 2] = t; break; }
+      case 'ROT': { const a = D[sp - 3]; D[sp - 3] = D[sp - 2]; D[sp - 2] = D[sp - 1]; D[sp - 1] = a; break; }
+      case 'NEG': D[sp - 1] = -D[sp - 1] | 0; break;
+      case 'NOT': D[sp - 1] = ~D[sp - 1]; break;
+      case 'ADD': case 'SUB': case 'MUL': case 'DIV': case 'MOD':
+      case 'DIVU': case 'MODU': case 'AND': case 'OR': case 'XOR':
+      case 'SHL': case 'SHR': case 'SHRU': case 'EQ': case 'LT': case 'LTU': {
+        const b = D[sp - 1], a = D[sp - 2];
+        let r: number;
+        switch (name) {
+          case 'ADD': r = (a + b) | 0; break;
+          case 'SUB': r = (a - b) | 0; break;
+          case 'MUL': r = Math.imul(a, b); break;
+          case 'DIV': // signed; -2147483648 / -1 wraps instead of trapping
+            if (b === 0) return done(TRAP.DIV_ZERO);
+            r = a === -2147483648 && b === -1 ? a : (a / b) | 0;
+            break;
+          case 'MOD':
+            if (b === 0) return done(TRAP.DIV_ZERO);
+            r = b === -1 ? 0 : a % b | 0;
+            break;
+          case 'DIVU':
+            if (b === 0) return done(TRAP.DIV_ZERO);
+            r = Math.floor((a >>> 0) / (b >>> 0)) | 0;
+            break;
+          case 'MODU':
+            if (b === 0) return done(TRAP.DIV_ZERO);
+            r = (a >>> 0) % (b >>> 0) | 0;
+            break;
+          case 'AND': r = a & b; break;
+          case 'OR': r = a | b; break;
+          case 'XOR': r = a ^ b; break;
+          case 'SHL': r = a << (b & 31); break;
+          case 'SHR': r = a >> (b & 31); break;
+          case 'SHRU': r = (a >>> (b & 31)) | 0; break;
+          case 'EQ': r = a === b ? 1 : 0; break;
+          case 'LT': r = a < b ? 1 : 0; break;
+          case 'LTU': r = a >>> 0 < b >>> 0 ? 1 : 0; break;
+        }
+        sp -= 2;
+        D[sp++] = r;
+        break;
+      }
+      case 'JMP': case 'JZ': case 'JNZ': {
+        const rel = ((program[next - 2] | (program[next - 1] << 8)) << 16) >> 16;
+        let take = true;
+        if (name !== 'JMP') { const v = D[--sp]; take = name === 'JZ' ? v === 0 : v !== 0; }
+        if (take) pc = next + rel;
+        break;
+      }
+      case 'CALL':
+        if (csp === CALLS_MAX) return done(TRAP.CALL_DEPTH);
+        C[csp++] = next;
+        pc = program[next - 2] | (program[next - 1] << 8);
+        break;
+      case 'RET':
+        if (csp === 0) return done(TRAP.RET_EMPTY);
+        pc = C[--csp];
+        break;
+      case 'LOAD': {
+        const addr = D[sp - 1];
+        if (addr < 0 || addr >= MEMORY_WORDS) return done(TRAP.MEMORY);
+        D[sp - 1] = M[addr];
+        break;
+      }
+      case 'STORE': {
+        const addr = D[sp - 1];
+        const v = D[sp - 2];
+        if (addr < 0 || addr >= MEMORY_WORDS) return done(TRAP.MEMORY);
+        sp -= 2;
+        M[addr] = v;
+        break;
+      }
+      case 'PRINT': {
+        const bytes = enc.encode(String(D[sp - 1]));
+        if (olen + bytes.length > OUTPUT_MAX) return done(TRAP.OUTPUT);
+        sp--;
+        out.set(bytes, olen);
+        olen += bytes.length;
+        break;
+      }
+      case 'PUTC':
+        if (olen + 1 > OUTPUT_MAX) return done(TRAP.OUTPUT);
+        out[olen++] = D[--sp] & 255;
+        break;
+      case 'IN': D[sp++] = inPos < input.length ? input[inPos++] : -1; break;
+      case 'EXIT': return done(D[--sp] & 255);
+    }
+  }
+}
+const INPUT_DIR = process.env.MAKEFUN_INPUT_DIR ?? '/input', OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+for (const id of readdirSync(INPUT_DIR).sort()) {
+  const dir = join(INPUT_DIR, id);
+  let program: Uint8Array, input: Uint8Array;
+  try {
+    program = new Uint8Array(readFileSync(join(dir, 'program.bin')));
+    input = new Uint8Array(readFileSync(join(dir, 'input.bin')));
+  } catch { continue; } // not an instance directory
+  const { stdout, exit } = run(program, input);
+  const od = join(OUTPUT_DIR, id);
+  mkdirSync(od, { recursive: true });
+  writeFileSync(join(od, 'stdout.bin'), stdout);
+  writeFileSync(join(od, 'exit.txt'), exit + '\n');
+}
